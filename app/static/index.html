@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Domain Shift Audit</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, sans-serif;
+        line-height: 1.5;
+        color: #1f2937;
+        background: #f3f4f6;
+      }
+
+      body {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+
+      h1, h2 {
+        color: #111827;
+      }
+
+      section {
+        margin: 1.5rem 0;
+        padding: 1.25rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        background: #fff;
+      }
+
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      button {
+        padding: 0.55rem 0.85rem;
+        border: 0;
+        border-radius: 0.35rem;
+        color: #fff;
+        background: #1d4ed8;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      .error {
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid #b91c1c;
+        border-radius: 0.35rem;
+        color: #7f1d1d;
+        background: #fef2f2;
+      }
+
+      .verdict {
+        display: inline-block;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        font-weight: 700;
+      }
+
+      .high-drift {
+        color: #7f1d1d;
+        background: #fee2e2;
+      }
+
+      .low-drift {
+        color: #166534;
+        background: #dcfce7;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 1rem;
+        border-collapse: collapse;
+        text-align: left;
+      }
+
+      th, td {
+        padding: 0.6rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      tbody tr[data-audit-id] {
+        cursor: pointer;
+      }
+
+      tbody tr[data-audit-id]:hover,
+      tbody tr[data-audit-id]:focus {
+        background: #eff6ff;
+        outline: 2px solid #93c5fd;
+        outline-offset: -2px;
+      }
+
+      .muted {
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Domain Shift Audit</h1>
+      <p>Compare numeric features between source and target cohorts.</p>
+    </header>
+
+    <main>
+      <section aria-labelledby="upload-heading">
+        <h2 id="upload-heading">Upload data</h2>
+        <form id="upload-form">
+          <label for="csv-file">CSV file</label>
+          <input id="csv-file" name="file" type="file" accept=".csv,text/csv" required>
+          <button id="upload-button" type="submit">Run audit</button>
+        </form>
+        <div id="upload-error" class="error" role="alert" hidden></div>
+      </section>
+
+      <section id="result-section" aria-labelledby="result-heading" hidden>
+        <h2 id="result-heading">Audit result</h2>
+        <p id="verdict"></p>
+        <p id="counts"></p>
+        <h3>Top 10 features by q-value</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Feature</th>
+                <th scope="col">Fold change</th>
+                <th scope="col">Q-value</th>
+                <th scope="col">Significant</th>
+              </tr>
+            </thead>
+            <tbody id="feature-results"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="history-heading">
+        <h2 id="history-heading">Audit history</h2>
+        <div id="history-error" class="error" role="alert" hidden></div>
+        <p id="history-empty" class="muted" hidden>No past audits.</p>
+        <div class="table-wrap">
+          <table id="history-table" hidden>
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Filename</th>
+                <th scope="col">Date</th>
+                <th scope="col">Verdict</th>
+              </tr>
+            </thead>
+            <tbody id="history-results"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const uploadForm = document.querySelector("#upload-form");
+      const uploadButton = document.querySelector("#upload-button");
+      const fileInput = document.querySelector("#csv-file");
+      const uploadError = document.querySelector("#upload-error");
+      const resultSection = document.querySelector("#result-section");
+      const verdictElement = document.querySelector("#verdict");
+      const countsElement = document.querySelector("#counts");
+      const featureResults = document.querySelector("#feature-results");
+      const historyResults = document.querySelector("#history-results");
+      const historyTable = document.querySelector("#history-table");
+      const historyEmpty = document.querySelector("#history-empty");
+      const historyError = document.querySelector("#history-error");
+
+      function setError(element, message) {
+        element.textContent = message;
+        element.hidden = false;
+      }
+
+      function clearError(element) {
+        element.textContent = "";
+        element.hidden = true;
+      }
+
+      function formatDate(value) {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+      }
+
+      async function responseData(response) {
+        const data = await response.json();
+        if (!response.ok) {
+          const detail = typeof data.detail === "string"
+            ? data.detail
+            : `Request failed (${response.status}).`;
+          throw new Error(detail);
+        }
+        return data;
+      }
+
+      function showAudit(audit) {
+        resultSection.hidden = false;
+        verdictElement.textContent = audit.verdict;
+        verdictElement.className = `verdict ${
+          audit.verdict === "HIGH_DRIFT" ? "high-drift" : "low-drift"
+        }`;
+        countsElement.textContent =
+          `Source: ${audit.n_source} | Target: ${audit.n_target} | ` +
+          `Features: ${audit.n_features} | Significant: ${audit.n_significant}`;
+
+        featureResults.replaceChildren();
+        const sortedFeatures = [...audit.feature_results]
+          .sort((left, right) => left.q_value - right.q_value)
+          .slice(0, 10);
+
+        for (const feature of sortedFeatures) {
+          const row = document.createElement("tr");
+          const values = [
+            feature.feature,
+            feature.fold_change === null ? "N/A" : String(feature.fold_change),
+            String(feature.q_value),
+            feature.significant ? "Yes" : "No",
+          ];
+          for (const value of values) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.append(cell);
+          }
+          featureResults.append(row);
+        }
+      }
+
+      function addHistoryRow(audit) {
+        const row = document.createElement("tr");
+        row.tabIndex = 0;
+        row.dataset.auditId = String(audit.id);
+        row.setAttribute("aria-label", `Open audit ${audit.id}: ${audit.filename}`);
+
+        for (const value of [
+          String(audit.id),
+          audit.filename,
+          formatDate(audit.created_at),
+          audit.verdict,
+        ]) {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.append(cell);
+        }
+
+        const openAudit = () => loadAudit(audit.id);
+        row.addEventListener("click", openAudit);
+        row.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openAudit();
+          }
+        });
+        historyResults.append(row);
+      }
+
+      async function loadHistory() {
+        clearError(historyError);
+        try {
+          const audits = await responseData(await fetch("/api/audits"));
+          historyResults.replaceChildren();
+          historyTable.hidden = audits.length === 0;
+          historyEmpty.hidden = audits.length !== 0;
+          for (const audit of audits) {
+            addHistoryRow(audit);
+          }
+        } catch (error) {
+          historyTable.hidden = true;
+          historyEmpty.hidden = true;
+          setError(historyError, `Could not load audit history: ${error.message}`);
+        }
+      }
+
+      async function loadAudit(auditId) {
+        clearError(uploadError);
+        resultSection.hidden = true;
+        try {
+          const audit = await responseData(
+            await fetch(`/api/audits/${encodeURIComponent(auditId)}`)
+          );
+          showAudit(audit);
+        } catch (error) {
+          setError(uploadError, `Could not load audit: ${error.message}`);
+        }
+      }
+
+      uploadForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearError(uploadError);
+        resultSection.hidden = true;
+        featureResults.replaceChildren();
+        uploadButton.disabled = true;
+
+        try {
+          const formData = new FormData(uploadForm);
+          const audit = await responseData(
+            await fetch("/api/audits", { method: "POST", body: formData })
+          );
+          showAudit(audit);
+          await loadHistory();
+        } catch (error) {
+          setError(uploadError, error.message);
+        } finally {
+          uploadButton.disabled = false;
+        }
+      });
+
+      loadHistory();
+    </script>
+  </body>
+</html>
