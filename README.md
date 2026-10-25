@@ -1,0 +1,47 @@
+# Domain Shift Audit
+
+A small web service that checks whether a machine learning model trained on one
+hospital cohort can be trusted on another. A user uploads a table of extracted
+imaging features from two cohorts, and the service reports which features have
+drifted and by how much.
+
+## The problem
+
+AI models for medical imaging are usually trained on data from a few
+high-resource institutions. When they are used in a different country or
+scanner setting, the input data can look statistically different (a "domain
+shift"), and predictions become unreliable. Checking this before deployment is
+slow and manual. This service automates that first safety check.
+
+## What the system does
+
+1. The user uploads a CSV file. Each row is one patient, one column is `cohort`
+   (for example `source` or `target`), and the other columns are numeric features.
+2. The backend compares the two cohorts feature by feature using the
+   Mann-Whitney U test, corrects p-values with FDR, and computes fold change.
+3. Results are stored in a database, so every audit run can be viewed later.
+4. A web page lists the most drifted features and gives a verdict:
+   - **Low drift**: fewer than 30% of features are significantly different.
+   - **High drift**: 30% or more are significantly different. Recalibrate
+     before reusing a model.
+
+## Expected behavior
+
+- A valid CSV returns an audit result in a few seconds.
+- An invalid CSV (missing `cohort` column, fewer than two cohorts, no numeric
+  features) returns a clear error message, and nothing is stored.
+- Past runs remain available after the app restarts.
+
+## Data note
+
+Only synthetic or public data is used in this repository. No patient data is
+stored or shipped.
+
+## Tech stack
+
+Python, FastAPI, SQLite, a single HTML page, pytest, Docker Compose,
+GitHub Actions.
+
+## Run locally
+
+Instructions will be added as the project is built (see `docs/process.md`).
