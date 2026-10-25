@@ -13,7 +13,7 @@ Full requirements are in `SPEC.md`. Work is tracked in GitHub Issues
 
 ## Stack
 
-Python 3.11, FastAPI, SQLite, one HTML page (no frontend framework), pytest,
+Python 3.10+, FastAPI, SQLite, one HTML page (no frontend framework), pytest,
 Docker Compose, GitHub Actions.
 
 ## Commands
