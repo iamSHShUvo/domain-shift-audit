@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncIterator
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from app.audit import compute_statistics, parse_and_validate_csv
 from app.db import get_audit, initialize_db, list_audits, save_audit
@@ -14,6 +16,12 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(lifespan=lifespan)
+INDEX_FILE = Path(__file__).parent / "static" / "index.html"
+
+
+@app.get("/", include_in_schema=False)
+def home() -> FileResponse:
+    return FileResponse(INDEX_FILE, media_type="text/html")
 
 
 @app.get("/health")
