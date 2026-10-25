@@ -120,3 +120,61 @@ def save_audit(
         "verdict": verdict,
         "feature_results": feature_results,
     }
+
+
+def list_audits(db_path: str | Path | None = None) -> list[dict[str, object]]:
+    path = initialize_db(db_path)
+    connection = sqlite3.connect(path)
+    connection.row_factory = sqlite3.Row
+    try:
+        rows = connection.execute(
+            """
+            SELECT id, created_at, filename, n_source, n_target, n_features,
+                   n_significant, verdict
+            FROM audits
+            ORDER BY created_at DESC, id DESC
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+    return [dict(row) for row in rows]
+
+
+def get_audit(
+    audit_id: int, db_path: str | Path | None = None
+) -> dict[str, object] | None:
+    path = initialize_db(db_path)
+    connection = sqlite3.connect(path)
+    connection.row_factory = sqlite3.Row
+    try:
+        audit_row = connection.execute(
+            """
+            SELECT id, created_at, filename, n_source, n_target, n_features,
+                   n_significant, verdict
+            FROM audits
+            WHERE id = ?
+            """,
+            (audit_id,),
+        ).fetchone()
+        if audit_row is None:
+            return None
+
+        feature_rows = connection.execute(
+            """
+            SELECT feature, mean_source, mean_target, fold_change, p_value,
+                   q_value, significant
+            FROM feature_results
+            WHERE audit_id = ?
+            ORDER BY q_value ASC, feature ASC
+            """,
+            (audit_id,),
+        ).fetchall()
+    finally:
+        connection.close()
+
+    result = dict(audit_row)
+    result["feature_results"] = [
+        {**dict(row), "significant": bool(row["significant"])}
+        for row in feature_rows
+    ]
+    return result
