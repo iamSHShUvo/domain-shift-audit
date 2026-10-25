@@ -44,4 +44,18 @@ GitHub Actions.
 
 ## Run locally
 
-Instructions will be added as the project is built (see `docs/process.md`)
+Install dependencies and start the API from the repository root:
+
+```powershell
+python -m pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Generate the bundled synthetic example CSV with:
+
+```powershell
+python scripts/make_sample_data.py
+```
+
+The API is available at `http://127.0.0.1:8000`; its liveness endpoint is
+`/health`.
