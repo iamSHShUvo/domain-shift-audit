@@ -44,4 +44,4 @@ GitHub Actions.
 
 ## Run locally
 
-Instructions will be added as the project is built (see `docs/process.md`).
+Instructions will be added as the project is built (see `docs/process.md`)
