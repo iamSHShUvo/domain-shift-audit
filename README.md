@@ -66,6 +66,17 @@ python scripts/make_sample_data.py
 The API is available at `http://127.0.0.1:8000`; its liveness endpoint is
 `/health`.
 
+## Run with Docker
+
+Build the image and start the service with Docker Compose:
+
+```powershell
+docker compose up --build
+```
+
+The service is available at `http://127.0.0.1:8000`. Compose stores the SQLite
+database in a named volume mounted at `/data`.
+
 ## Run tests
 
 Run the test suite with Python:
@@ -79,3 +90,14 @@ Or use Make:
 ```text
 make test
 ```
+
+## Deployment
+
+1. Build the container image from this repository and publish it to a registry
+   your host can access.
+2. Create a container service on a host such as Render or Fly.io using that
+   image, and configure it to listen on port `8000`.
+3. Attach a persistent disk to the container at `/data`.
+4. Set the container environment variable `DB_PATH` to `/data/audits.db`.
+5. Configure the host's health check to request `/health`.
+6. Deploy the container and wait for the health check to report healthy.
