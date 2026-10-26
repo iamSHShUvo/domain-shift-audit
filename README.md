@@ -1,85 +1,123 @@
+<div align="center">
+
 # Domain Shift Audit
 
-A small web service that checks whether a machine learning model trained on one
-hospital cohort can be trusted on another. A user uploads a table of extracted
-imaging features from two cohorts, and the service reports which features have
-drifted and by how much.
+### A practical first check for feature distribution shift between imaging cohorts.
 
-## The problem
+Upload a CSV of extracted features from a **source** and **target** cohort.
+Review statistical differences, a concise drift verdict, and previous audit runs.
 
-AI models for medical imaging are usually trained on data from a few
-high-resource institutions. When they are used in a different country or
-scanner setting, the input data can look statistically different (a "domain
-shift"), and predictions become unreliable. Checking this before deployment is
-slow and manual. This service automates that first safety check.
+<br>
 
-## What the system does
+![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
+![SQLite](https://img.shields.io/badge/Storage-SQLite-003B57?logo=sqlite&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-0A7B67.svg)](LICENSE)
 
-1. The user uploads a CSV file. Each row is one patient, one column is `cohort`
-   (for example `source` or `target`), and the other columns are numeric features.
-2. The backend compares the two cohorts feature by feature using the
-   Mann-Whitney U test, corrects p-values with FDR, and computes fold change.
-3. Results are stored in a database, so every audit run can be viewed later.
-4. A web page lists the most drifted features and gives a verdict:
-   - **Low drift**: fewer than 30% of features are significantly different.
-   - **High drift**: 30% or more are significantly different. Recalibrate
-     before reusing a model.
+</div>
 
-## Expected behavior
+> **Research tool, not a clinical device.** Domain Shift Audit provides a
+> statistical screening result, not evidence of model safety or clinical
+> performance. Validate findings with domain experts before making deployment
+> decisions.
 
-- A valid CSV returns an audit result in a few seconds.
-- An invalid CSV (missing `cohort` column, fewer than two cohorts, no numeric
-  features) returns a clear error message, and nothing is stored.
-- Past runs remain available after the app restarts.
+## About
 
-## Data note
+Imaging models can encounter different scanners, patient populations, and
+acquisition settings when moved beyond the institutions where they were
+developed. These changes can alter the distributions of model input features
+and may affect performance.
 
-Only synthetic or public data is used in this repository. No patient data is
-stored or shipped.
+**Domain Shift Audit** makes an initial comparison easier to run and review.
+It accepts a table of extracted features, compares the two cohorts feature by
+feature, and saves each run so it can be reviewed later. It is intentionally
+focused on tabular features; it does not process images or assess model
+predictions.
 
-## Tech stack
+## How it works
 
-Python, FastAPI, SQLite, a single HTML page, pytest, Docker Compose,
-GitHub Actions.
+1. **Upload** a CSV containing a `cohort` column and numeric feature columns.
+2. **Compare** source and target feature distributions using two-sided
+   Mann–Whitney U tests.
+3. **Adjust** p-values across tested features using the Benjamini–Hochberg
+   false discovery rate procedure.
+4. **Review** feature-level statistics and an overall drift verdict in the web
+   interface or API.
+5. **Return** to previous runs, which are stored in SQLite.
 
-## Run locally
+| Verdict | Rule |
+| --- | --- |
+| `LOW_DRIFT` | Fewer than 30% of tested features have an adjusted q-value below 0.05. |
+| `HIGH_DRIFT` | At least 30% of tested features have an adjusted q-value below 0.05. |
 
-Install dependencies and start the API from the repository root:
+Constant-valued features are skipped. Fold change is calculated as the target
+mean divided by the source mean; it is null when the source mean is zero.
+
+## Input format
+
+Each row represents one observation. The `cohort` value must be exactly
+`source` or `target`, with at least five rows in each cohort. Include one or
+more numeric feature columns.
+
+```csv
+cohort,feature_01,feature_02
+source,0.42,1.15
+source,0.38,0.97
+target,1.03,1.28
+target,0.91,1.44
+```
+
+The example shows the required structure only; a valid upload needs at least
+five rows for **each** cohort. Invalid files receive a clear error and are not
+saved as audit runs.
+
+## Get started
+
+### Run locally
+
+From the repository root, install the dependencies and start the app:
 
 ```powershell
 python -m pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-The same commands are available with Make:
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) to upload a CSV and review
+results. The default SQLite database is `data/audits.db`; set `DB_PATH` to use
+a different location.
 
-```text
-make run
-```
-
-Generate the bundled synthetic example CSV with:
+To generate the bundled synthetic example:
 
 ```powershell
 python scripts/make_sample_data.py
 ```
 
-The API is available at `http://127.0.0.1:8000`; its liveness endpoint is
-`/health`.
-
-## Run with Docker
-
-Build the image and start the service with Docker Compose:
+### Run with Docker Compose
 
 ```powershell
 docker compose up --build
 ```
 
-The service is available at `http://127.0.0.1:8000`. Compose stores the SQLite
-database in a named volume mounted at `/data`.
+The app is available at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+Compose persists the SQLite database in the `audit-data` named volume, mounted
+inside the container at `/data`.
 
-## Run tests
+## API
 
-Run the test suite with Python:
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/` | Web interface |
+| `GET` | `/health` | Liveness check |
+| `POST` | `/api/audits` | Upload a CSV and create an audit |
+| `GET` | `/api/audits` | List saved audits, newest first |
+| `GET` | `/api/audits/{id}` | Retrieve an audit and its feature results |
+
+Interactive API documentation is available at
+[/docs](http://127.0.0.1:8000/docs) while the app is running.
+
+## Tests
+
+Run the complete test suite with:
 
 ```powershell
 python -m pytest
@@ -91,13 +129,17 @@ Or use Make:
 make test
 ```
 
-## Deployment
+## Data and scope
 
-1. Build the container image from this repository and publish it to a registry
-   your host can access.
-2. Create a container service on a host such as Render or Fly.io using that
-   image, and configure it to listen on port `8000`.
-3. Attach a persistent disk to the container at `/data`.
-4. Set the container environment variable `DB_PATH` to `/data/audits.db`.
-5. Configure the host's health check to request `/health`.
-6. Deploy the container and wait for the health check to report healthy.
+This repository uses synthetic or public data only. Do not upload or commit
+patient-identifiable or otherwise sensitive data. Domain Shift Audit does not
+perform DICOM/image processing, model training, user management, or clinical
+validation.
+
+## Technology
+
+Python · FastAPI · pandas · SciPy · SQLite · pytest · Docker Compose
+
+---
+
+Released under the [MIT License](LICENSE).
