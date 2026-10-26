@@ -51,6 +51,12 @@ python -m pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
+The same commands are available with Make:
+
+```text
+make run
+```
+
 Generate the bundled synthetic example CSV with:
 
 ```powershell
@@ -59,3 +65,17 @@ python scripts/make_sample_data.py
 
 The API is available at `http://127.0.0.1:8000`; its liveness endpoint is
 `/health`.
+
+## Run tests
+
+Run the test suite with Python:
+
+```powershell
+python -m pytest
+```
+
+Or use Make:
+
+```text
+make test
+```
