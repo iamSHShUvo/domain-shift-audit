@@ -111,6 +111,8 @@ Instance**, connect this repository, and apply the blueprint. Render will build
 the Docker image, expose the service over HTTPS, and use `/health` as its health
 check.
 
+**Live application:** [domain-shift-audit.onrender.com](https://domain-shift-audit.onrender.com)
+
 The free configuration uses an ephemeral SQLite database at `/tmp/audits.db`,
 so saved audit history may be cleared when the service restarts or redeploys.
 Use a paid Render service with a persistent disk mounted at `/data` and set
