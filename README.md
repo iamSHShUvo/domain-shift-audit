@@ -12,6 +12,7 @@ Review statistical differences, a concise drift verdict, and previous audit runs
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
 ![SQLite](https://img.shields.io/badge/Storage-SQLite-003B57?logo=sqlite&logoColor=white)
+[![CI](https://github.com/iamSHShUvo/domain-shift-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/iamSHShUvo/domain-shift-audit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-0A7B67.svg)](LICENSE)
 
 </div>
@@ -128,6 +129,11 @@ Or use Make:
 ```text
 make test
 ```
+
+## CI
+
+The GitHub Actions workflow runs the test suite and a Docker build and health
+check on every pull request. It also runs for pushes to `main`.
 
 ## Data and scope
 
