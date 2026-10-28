@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: domain-shift-audit
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DB_PATH
+        value: /tmp/audits.db

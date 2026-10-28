@@ -103,6 +103,19 @@ The app is available at [http://127.0.0.1:8000](http://127.0.0.1:8000).
 Compose persists the SQLite database in the `audit-data` named volume, mounted
 inside the container at `/data`.
 
+### Deploy to Render
+
+This repository includes a Render Blueprint in
+[render.yaml](render.yaml). In the Render dashboard, choose **New → Blueprint
+Instance**, connect this repository, and apply the blueprint. Render will build
+the Docker image, expose the service over HTTPS, and use `/health` as its health
+check.
+
+The free configuration uses an ephemeral SQLite database at `/tmp/audits.db`,
+so saved audit history may be cleared when the service restarts or redeploys.
+Use a paid Render service with a persistent disk mounted at `/data` and set
+`DB_PATH=/data/audits.db` when durable history is required.
+
 ## API
 
 | Method | Endpoint | Description |

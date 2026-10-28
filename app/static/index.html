@@ -7,45 +7,253 @@
     <style>
       :root {
         color-scheme: light;
-        font-family: system-ui, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+          "SF Pro Text", "Segoe UI", sans-serif;
         line-height: 1.5;
-        color: #1f2937;
-        background: #f3f4f6;
+        color: #1d2735;
+        background: #eef4f7;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      * {
+        box-sizing: border-box;
       }
 
       body {
-        max-width: 960px;
+        position: relative;
+        max-width: 1180px;
         margin: 0 auto;
-        padding: 2rem 1rem;
+        padding: 3.5rem 1.5rem 5rem;
+        overflow-x: hidden;
       }
 
-      h1, h2 {
-        color: #111827;
+      body::before,
+      body::after {
+        position: fixed;
+        z-index: -1;
+        width: 28rem;
+        height: 28rem;
+        border-radius: 50%;
+        filter: blur(1px);
+        content: "";
+        pointer-events: none;
+      }
+
+      body::before {
+        top: -11rem;
+        left: -9rem;
+        background: rgba(144, 210, 218, 0.38);
+      }
+
+      body::after {
+        right: -11rem;
+        bottom: -12rem;
+        background: rgba(188, 175, 239, 0.35);
+      }
+
+      header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 2rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin: 0 0 0.85rem;
+        color: #587482;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: #20a58a;
+        box-shadow: 0 0 0 0.25rem rgba(32, 165, 138, 0.13);
+        content: "";
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 650px;
+        margin-bottom: 0.8rem;
+        color: #172433;
+        font-size: clamp(2.35rem, 5vw, 4.4rem);
+        font-weight: 700;
+        letter-spacing: -0.065em;
+        line-height: 0.98;
+      }
+
+      header > div > p:last-child {
+        max-width: 570px;
+        margin-bottom: 0;
+        color: #627686;
+        font-size: 1.1rem;
+      }
+
+      .header-mark {
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 4.3rem;
+        height: 4.3rem;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 1.3rem;
+        color: #fff;
+        background: linear-gradient(145deg, #193c52, #2e8291);
+        box-shadow: 0 1rem 2rem rgba(39, 78, 99, 0.2),
+          inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        font-size: 1.5rem;
+        font-weight: 700;
       }
 
       section {
-        margin: 1.5rem 0;
-        padding: 1.25rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.5rem;
-        background: #fff;
+        margin: 1.25rem 0;
+        padding: clamp(1.25rem, 3vw, 2rem);
+        border: 1px solid rgba(255, 255, 255, 0.76);
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.57);
+        box-shadow: 0 1.5rem 4rem rgba(45, 80, 95, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+
+      section > h2 {
+        margin-bottom: 0.35rem;
+        color: #1a2b3a;
+        font-size: 1.35rem;
+        letter-spacing: -0.025em;
+      }
+
+      section > h2 + p {
+        color: #71838e;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .section-heading h2 {
+        margin-bottom: 0;
+      }
+
+      .section-label {
+        color: #78909c;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .upload-section {
+        padding: clamp(1.35rem, 4vw, 2.5rem);
+      }
+
+      .upload-section > p {
+        max-width: 620px;
+        margin-bottom: 1.5rem;
+      }
+
+      #upload-form {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.65rem;
+        border: 1px dashed rgba(76, 124, 139, 0.38);
+        border-radius: 1.1rem;
+        background: rgba(241, 249, 250, 0.7);
+      }
+
+      .file-picker {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        gap: 0.85rem;
+        padding: 0.35rem 0.7rem;
+        color: #496574;
+        font-size: 0.92rem;
+      }
+
+      .file-picker span:first-child {
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 0.75rem;
+        color: #297c83;
+        background: #d9f0ee;
+        font-size: 1.15rem;
+      }
+
+      input[type="file"] {
+        width: 100%;
+        color: #6d808d;
+        font: inherit;
+        font-size: 0.88rem;
+      }
+
+      input[type="file"]::file-selector-button {
+        margin-right: 0.6rem;
+        padding: 0.48rem 0.75rem;
+        border: 1px solid #c9dfe2;
+        border-radius: 0.55rem;
+        color: #28717a;
+        background: #f8fdfd;
+        font: inherit;
+        font-size: 0.82rem;
+        cursor: pointer;
       }
 
       form {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem;
+        margin: 0;
       }
 
       button {
-        padding: 0.55rem 0.85rem;
+        padding: 0.78rem 1.15rem;
         border: 0;
-        border-radius: 0.35rem;
+        border-radius: 0.7rem;
         color: #fff;
-        background: #1d4ed8;
+        background: #193f55;
+        box-shadow: 0 0.55rem 1rem rgba(25, 63, 85, 0.18);
         font: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
         cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease,
+          background 160ms ease;
+      }
+
+      button:hover:not(:disabled) {
+        background: #245c72;
+        box-shadow: 0 0.75rem 1.2rem rgba(25, 63, 85, 0.23);
+        transform: translateY(-1px);
+      }
+
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid rgba(35, 145, 153, 0.35);
+        outline-offset: 3px;
       }
 
       button:disabled {
@@ -55,83 +263,223 @@
 
       .error {
         margin-top: 1rem;
-        padding: 0.75rem 1rem;
-        border: 1px solid #b91c1c;
-        border-radius: 0.35rem;
-        color: #7f1d1d;
-        background: #fef2f2;
+        padding: 0.8rem 1rem;
+        border: 1px solid rgba(190, 77, 81, 0.24);
+        border-radius: 0.75rem;
+        color: #9c3d48;
+        background: rgba(255, 239, 239, 0.75);
+      }
+
+      .result-intro {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.4rem;
+      }
+
+      .result-intro h2 {
+        margin-bottom: 0;
+      }
+
+      .result-badge {
+        color: #6b8490;
+        font-size: 0.8rem;
+        font-weight: 700;
       }
 
       .verdict {
         display: inline-block;
-        padding: 0.35rem 0.7rem;
+        padding: 0.5rem 0.85rem;
         border-radius: 999px;
+        letter-spacing: 0.03em;
         font-weight: 700;
       }
 
       .high-drift {
-        color: #7f1d1d;
-        background: #fee2e2;
+        color: #9c3d48;
+        background: #ffe4e4;
       }
 
       .low-drift {
-        color: #166534;
-        background: #dcfce7;
+        color: #167765;
+        background: #dff6ee;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.7rem;
+        margin-bottom: 1.8rem;
+      }
+
+      .metric {
+        padding: 1rem;
+        border: 1px solid rgba(185, 213, 218, 0.5);
+        border-radius: 0.9rem;
+        background: rgba(246, 252, 252, 0.62);
+      }
+
+      .metric-label {
+        display: block;
+        margin-bottom: 0.25rem;
+        color: #78909c;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .metric-value {
+        display: block;
+        color: #244254;
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+      }
+
+      h3 {
+        margin-bottom: 0.35rem;
+        color: #304c5d;
+        font-size: 1rem;
       }
 
       .table-wrap {
         overflow-x: auto;
+        border: 1px solid rgba(191, 214, 218, 0.56);
+        border-radius: 0.9rem;
+        background: rgba(252, 255, 255, 0.55);
       }
 
       table {
         width: 100%;
-        margin-top: 1rem;
         border-collapse: collapse;
         text-align: left;
       }
 
       th, td {
-        padding: 0.6rem;
-        border-bottom: 1px solid #e5e7eb;
+        padding: 0.82rem 1rem;
+        border-bottom: 1px solid rgba(191, 214, 218, 0.42);
+        white-space: nowrap;
+      }
+
+      th {
+        color: #718892;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      td {
+        color: #3d5868;
+        font-size: 0.88rem;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: 0;
       }
 
       tbody tr[data-audit-id] {
         cursor: pointer;
+        transition: background 150ms ease;
       }
 
       tbody tr[data-audit-id]:hover,
       tbody tr[data-audit-id]:focus {
-        background: #eff6ff;
-        outline: 2px solid #93c5fd;
+        background: rgba(222, 243, 244, 0.7);
+        outline: 2px solid rgba(83, 171, 177, 0.35);
         outline-offset: -2px;
       }
 
       .muted {
-        color: #6b7280;
+        color: #78909c;
+      }
+
+      @media (max-width: 700px) {
+        body {
+          padding: 2rem 1rem 3rem;
+        }
+
+        header {
+          margin-bottom: 1.75rem;
+        }
+
+        .header-mark {
+          width: 3.4rem;
+          height: 3.4rem;
+          border-radius: 1rem;
+        }
+
+        #upload-form {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .file-picker {
+          padding: 0.35rem 0.25rem;
+        }
+
+        #upload-form button {
+          width: 100%;
+        }
+
+        .metrics {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 420px) {
+        header {
+          display: block;
+        }
+
+        .header-mark {
+          display: none;
+        }
       }
     </style>
   </head>
   <body>
     <header>
-      <h1>Domain Shift Audit</h1>
-      <p>Compare numeric features between source and target cohorts.</p>
+      <div>
+        <p class="eyebrow">Feature distribution intelligence</p>
+        <h1>Understand the shift before it becomes a surprise.</h1>
+        <p>Compare numeric features between source and target cohorts with a clear, repeatable audit.</p>
+      </div>
+      <div class="header-mark" aria-hidden="true">DS</div>
     </header>
 
     <main>
-      <section aria-labelledby="upload-heading">
-        <h2 id="upload-heading">Upload data</h2>
+      <section class="upload-section" aria-labelledby="upload-heading">
+        <div class="section-heading">
+          <div>
+            <h2 id="upload-heading">Start an audit</h2>
+            <p>Upload a CSV with a <strong>cohort</strong> column and numeric features.</p>
+          </div>
+          <span class="section-label">CSV analysis</span>
+        </div>
         <form id="upload-form">
-          <label for="csv-file">CSV file</label>
-          <input id="csv-file" name="file" type="file" accept=".csv,text/csv" required>
-          <button id="upload-button" type="submit">Run audit</button>
+          <label class="file-picker" for="csv-file">
+            <span aria-hidden="true">↥</span>
+            <span>
+              <strong>Choose a data file</strong><br>
+              <small>Source and target cohorts · CSV only</small>
+            </span>
+            <input id="csv-file" name="file" type="file" accept=".csv,text/csv" required>
+          </label>
+          <button id="upload-button" type="submit">Run audit <span aria-hidden="true">→</span></button>
         </form>
         <div id="upload-error" class="error" role="alert" hidden></div>
       </section>
 
       <section id="result-section" aria-labelledby="result-heading" hidden>
-        <h2 id="result-heading">Audit result</h2>
+        <div class="result-intro">
+          <h2 id="result-heading">Audit result</h2>
+          <span class="result-badge">Statistical summary</span>
+        </div>
         <p id="verdict"></p>
-        <p id="counts"></p>
+        <div id="counts" class="metrics" aria-label="Audit summary"></div>
         <h3>Top 10 features by q-value</h3>
         <div class="table-wrap">
           <table>
@@ -149,7 +497,13 @@
       </section>
 
       <section aria-labelledby="history-heading">
-        <h2 id="history-heading">Audit history</h2>
+        <div class="section-heading">
+          <div>
+            <h2 id="history-heading">Audit history</h2>
+            <p>Revisit previous comparisons and their recorded verdicts.</p>
+          </div>
+          <span class="section-label">Saved locally</span>
+        </div>
         <div id="history-error" class="error" role="alert" hidden></div>
         <p id="history-empty" class="muted" hidden>No past audits.</p>
         <div class="table-wrap">
@@ -214,9 +568,24 @@
         verdictElement.className = `verdict ${
           audit.verdict === "HIGH_DRIFT" ? "high-drift" : "low-drift"
         }`;
-        countsElement.textContent =
-          `Source: ${audit.n_source} | Target: ${audit.n_target} | ` +
-          `Features: ${audit.n_features} | Significant: ${audit.n_significant}`;
+        countsElement.replaceChildren();
+        for (const [label, value] of [
+          ["Source rows", audit.n_source],
+          ["Target rows", audit.n_target],
+          ["Features tested", audit.n_features],
+          ["Significant", audit.n_significant],
+        ]) {
+          const metric = document.createElement("div");
+          metric.className = "metric";
+          const metricLabel = document.createElement("span");
+          metricLabel.className = "metric-label";
+          metricLabel.textContent = label;
+          const metricValue = document.createElement("span");
+          metricValue.className = "metric-value";
+          metricValue.textContent = String(value);
+          metric.append(metricLabel, metricValue);
+          countsElement.append(metric);
+        }
 
         featureResults.replaceChildren();
         const sortedFeatures = [...audit.feature_results]
